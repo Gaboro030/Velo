@@ -1,0 +1,28 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      # Built here and not on a personal PC: a local build embeds the Windows user name in its file paths.
+      - name: Build
+        run: npx --yes @tauri-apps/cli@2 build
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp src-tauri/target/release/velo.exe "Velo_${GITHUB_REF_NAME}_portable.exe"
+          gh release create "$GITHUB_REF_NAME" --title "Velo ${GITHUB_REF_NAME#v}" --generate-notes \
+            src-tauri/target/release/bundle/nsis/*-setup.exe "Velo_${GITHUB_REF_NAME}_portable.exe"

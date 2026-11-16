@@ -5,7 +5,7 @@
   // Only YouTube itself. Never Google's sign-in pages, never frames.
   if (!/(^|\.)youtube\.com$/.test(location.hostname) || window.top !== window || window.__velo) return;
   window.__velo = true;
-  const VERSION = '0.2.1';
+  const VERSION = '0.2.2';
 
   // ---------- settings ----------
   const KEY = 'velo:settings';
@@ -39,6 +39,7 @@
   const L = {
     de: {
       n_general: 'Allgemein', n_skip: 'Werbung & Segmente', n_keys: 'Tastenkürzel', n_player: 'Player', n_look: 'Aussehen', n_notify: 'Hinweise',
+      back: 'Zurück',
       account: 'YouTube-Konto', accountD: 'Melde dich an, um deine Abos und deinen Feed zu sehen', accountIn: 'Du bist angemeldet', signIn: 'Anmelden',
       lang: 'Sprache', system: 'Systemsprache', startPage: 'Startseite', startPageD: 'Was beim Öffnen der App zuerst erscheint', sp_home: 'Start', sp_subs: 'Abos',
       sAds: 'Werbung', sSegs: 'Segmente', sSaved: 'Gespart', resetStats: 'Statistik zurücksetzen', resetAll: 'Alle Einstellungen zurücksetzen', sure: 'Wirklich?',
@@ -76,6 +77,7 @@
     },
     en: {
       n_general: 'General', n_skip: 'Ads & segments', n_keys: 'Shortcuts', n_player: 'Player', n_look: 'Appearance', n_notify: 'Notices',
+      back: 'Back',
       account: 'YouTube account', accountD: 'Sign in to see your subscriptions and feed', accountIn: 'You are signed in', signIn: 'Sign in',
       lang: 'Language', system: 'System language', startPage: 'Start page', startPageD: 'What shows first when the app opens', sp_home: 'Home', sp_subs: 'Subscriptions',
       sAds: 'Ads', sSegs: 'Segments', sSaved: 'Saved', resetStats: 'Reset statistics', resetAll: 'Reset all settings', sure: 'Are you sure?',
@@ -113,6 +115,7 @@
     },
     tr: {
       n_general: 'Genel', n_skip: 'Reklam ve bölümler', n_keys: 'Kısayollar', n_player: 'Oynatıcı', n_look: 'Görünüm', n_notify: 'Bildirimler',
+      back: 'Geri',
       account: 'YouTube hesabı', accountD: 'Aboneliklerini ve akışını görmek için oturum aç', accountIn: 'Oturum açık', signIn: 'Oturum aç',
       lang: 'Dil', system: 'Sistem dili', startPage: 'Başlangıç sayfası', startPageD: 'Uygulama açılınca ilk görünen sayfa', sp_home: 'Ana sayfa', sp_subs: 'Abonelikler',
       sAds: 'Reklam', sSegs: 'Bölüm', sSaved: 'Kazanılan', resetStats: 'İstatistikleri sıfırla', resetAll: 'Tüm ayarları sıfırla', sure: 'Emin misin?',
@@ -202,6 +205,7 @@
     player: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM10 8l6 4-6 4V8z',
     look: 'M9.9 4.2A10.9 10.9 0 0 1 12 4c7 0 10 8 10 8a13.2 13.2 0 0 1-1.7 2.7M6.6 6.6A13.5 13.5 0 0 0 2 12s3 8 10 8a10.9 10.9 0 0 0 5.4-1.4M2 2l20 20M9.9 9.9a3 3 0 0 0 4.2 4.2',
     notify: 'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.94 1.94 0 0 0 3.4 0',
+    back: 'M19 12H5M12 19l-7-7 7-7',
     chevron: 'm6 9 6 6 6-6', check: 'M20 6 9 17l-5-5', minus: 'M5 12h14', plus: 'M12 5v14M5 12h14',
   };
 
@@ -236,6 +240,8 @@
       transition: background-color 180ms cubic-bezier(.22,1,.36,1), transform 120ms cubic-bezier(.22,1,.36,1);
     }
     html[dark] .velo-btn { color: #f1f1f1; }
+    .velo-back { margin: 0 4px 0 0; }
+    .velo-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
     .velo-btn:hover { background: var(--yt-spec-10-percent-layer, rgb(128 128 128 / .15)); }
     .velo-btn:active { transform: scale(.92); }
     .velo-btn:focus-visible { outline: 2px solid var(--yt-spec-call-to-action, #3ea6ff); outline-offset: 2px; }
@@ -614,6 +620,7 @@
   // Keys typed in the window must not trigger YouTube's player shortcuts.
   for (const ev of ['keydown', 'keyup', 'keypress']) host.addEventListener(ev, (e) => e.stopPropagation());
 
+  const back = h('button', { className: 'velo-btn velo-back', type: 'button', onclick: () => history.back() }, icon(I.back, 22));
   const btn = h('button', { className: 'velo-btn', type: 'button', ariaExpanded: 'false', onclick: () => (isOpen() ? close() : open()) }, icon(I.sliders, 22));
 
   // One place for every change, so side effects never get forgotten.
@@ -779,6 +786,7 @@
   };
   const render = () => {
     btn.title = btn.ariaLabel = panel.ariaLabel = t('open');
+    back.title = back.ariaLabel = t('back');
     tabs.style.setProperty('--at', ORDER.indexOf(tab));
     tabs.replaceChildren(h('i', { className: 'ind' }), ...ORDER.map((id) => h('button', {
       className: 'tab', type: 'button', role: 'tab', ariaSelected: String(id === tab),
@@ -825,6 +833,8 @@
     skipAd();
     if (S.noIdle) window._lact = Date.now();
     if (!btn.isConnected) document.querySelector('ytd-masthead #end')?.prepend(btn);
+    if (!back.isConnected) document.querySelector('ytd-masthead #start')?.prepend(back);
+    back.disabled = !navigation.canGoBack;
     drawDislikes(); drawMarkers();
   }, 400);
   adopt();
